@@ -112,24 +112,15 @@ try {
     Run-Command -Quiet { & remove-item build -recurse -force }
     Run-Command -Quiet { & mkdir build }
     cd build
-
-    Write-Output "Skipping 32-bit build"
-    # NOTE: We skip the 32-bit build due to libssh2 build failing in 32-bit mode when stdcall is enabled.
-    # If you want to generate a 32-bit build, replace misc.c line 690
-    # static void * (* const volatile memset_libssh)(void *, int, size_t) = memset;
-    # with
-    # static void * (__cdecl * const volatile memset_libssh)(void *, int, size_t) = memset;
-    # and uncomment the following section
-
-    # Run-Command -Quiet -Fatal { & $cmake -G "Visual Studio $vs" -D ENABLE_TRACE=ON -D "BUILD_CLAR=$build_clar" -D "LIBGIT2_FILENAME=$binaryFilename" -DSTDCALL=ON -DSTDCALL=ON -D "EMBED_SSH_PATH=$libssh2_embed" -D GIT_SSH_MEMORY_CREDENTIALS=ON .. }
-    # Run-Command -Quiet -Fatal { & $cmake --build . --config $configuration }
-    # if ($test.IsPresent) { Run-Command -Quiet -Fatal { & $ctest -V . } }
-    # cd $configuration
-    # Assert-Consistent-Naming "$binaryFilename.dll" "*.dll"
-    # Run-Command -Quiet { & rm *.exp }
-    # Run-Command -Quiet { & rm $x86Directory\* }
-    # Run-Command -Quiet { & mkdir -fo $x86Directory }
-    # Run-Command -Quiet -Fatal { & copy -fo * $x86Directory -Exclude *.lib }
+    Run-Command -Quiet -Fatal { & $cmake -G "Visual Studio $vs" -D ENABLE_TRACE=ON -D "BUILD_CLAR=$build_clar" -D "LIBGIT2_FILENAME=$binaryFilename" -DSTDCALL=ON -DSTDCALL=ON -D "EMBED_SSH_PATH=$libssh2_embed" -D GIT_SSH_MEMORY_CREDENTIALS=ON .. }
+    Run-Command -Quiet -Fatal { & $cmake --build . --config $configuration }
+    if ($test.IsPresent) { Run-Command -Quiet -Fatal { & $ctest -V . } }
+    cd $configuration
+    Assert-Consistent-Naming "$binaryFilename.dll" "*.dll"
+    Run-Command -Quiet { & rm *.exp }
+    Run-Command -Quiet { & rm $x86Directory\* }
+    Run-Command -Quiet { & mkdir -fo $x86Directory }
+    Run-Command -Quiet -Fatal { & copy -fo * $x86Directory -Exclude *.lib }
     Pop-Location
 
     Push-Location $libgit2Directory
